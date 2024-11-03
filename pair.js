@@ -6,7 +6,7 @@ import fs from 'fs';
 import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
-// import { upload } from './mega.js';
+import { upload } from './core/upload.js';
 
 const app = express();
 
@@ -135,22 +135,11 @@ async function startAuth(phone) {
 
 				if (connection === 'open') {
 					await delay(10000);
-					let data1 = fs.createReadStream(`${sessionFolder}/creds.json`);
-					const output = await upload(data1, createRandomId() + '.json');
-					let sessi = output.includes('https://mega.nz/file/') ? 'GuruAi~' + output.split('https://mega.nz/file/')[1] : 'Error Uploading to Mega';
+					const sessionId = await upload(sessionFolder);
+					let msg = await sock.sendMessage(sock.user.id, { text: sessionId });
 					await delay(2000);
-					let guru = await sock.sendMessage(sock.user.id, { text: sessi });
-					await delay(2000);
-					await sock.sendMessage(
-						sock.user.id,
-						{
-							text: 'Hello there! 👋 \n\nDo not share your session id with anyone.\n\nPut the above in SESSION_ID var\n\nThanks for using GURU-BOT\n\n join support group:- https://chat.whatsapp.com/JY4R2D22pbLIKBMQWyBaLg \n',
-						},
-						{ quoted: guru },
-					);
-
+					await sock.sendMessage(sock.user.id, { text: 'Hello there! 👋 \n\nDo not share your session id with anyone.\n\nPut the above in SESSION_ID var\n' }, { quoted: msg });
 					console.log('Connected to WhatsApp Servers');
-
 					try {
 						deleteSessionFolder();
 					} catch (error) {
