@@ -6,11 +6,17 @@ import fs from 'fs';
 import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
-import { upload } from './core/upload.js';
-import useSQLiteAuthState from './client/state.js';
-import { accessKey } from './core/sessionId.js';
+import { upload } from './upload.js';
 
 const app = express();
+
+const deleteFolder = folderPath =>
+	fs.existsSync(folderPath) &&
+	fs.readdirSync(folderPath).forEach(file => {
+		const currentPath = path.join(folderPath, file);
+		fs.lstatSync(currentPath).isDirectory() ? deleteFolder(currentPath) : fs.unlinkSync(currentPath);
+	}) &&
+	fs.rmdirSync(folderPath);
 
 app.use((req, res, next) => {
 	res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -58,7 +64,7 @@ async function startAuth(phone) {
 				await fs.mkdirSync(sessionFolder);
 			}
 
-			const { state, saveCreds } = await useSQLiteAuthState(accessKey);
+			const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
 
 			const sock = Baileys.makeWASocket({
 				version: [2, 3000, 1015901307],
@@ -104,11 +110,19 @@ async function startAuth(phone) {
 
 				if (connection === 'open') {
 					await delay(10000);
-					await upload(sessionFolder);
-					let msg = await sock.sendMessage(sock.user.id, { text: accessKey });
+					const sessionId = await upload(sessionFolder);
+					let msg = await sock.sendMessage(sock.user.id, { text: sessionId });
 					await delay(2000);
-					await sock.sendMessage(sock.user.id, { text: 'Hello there! 👋 \n\nDo not share your session id with anyone.\n\nPut the above in SESSION_ID var\n' }, { quoted: msg });
+					await sock.sendMessage(
+						sock.user.id,
+						{
+							text: 'ᴘᴀɪʀ sᴜᴄᴄᴇss\nxsᴛʀᴏ ᴍᴅ ɪs ᴀ sɪᴍᴘʟᴇ ᴡʜᴀᴛsᴀᴘᴘ ʙᴏᴛ ᴀʙʏ ᴀsᴛʀᴏ-x𝟷𝟶\n*ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ғᴏʀ ʟᴀᴛᴇsᴛ ᴜᴘᴅᴀᴛᴇ ᴀɴᴅ sᴜᴘᴘᴏʀᴛ*\n*ᴛʜɪs ɪs ᴛʜᴇ ʙᴇɢɪɴɴɪɴɢ ᴏғ ʏᴏᴜʀ ʟᴇɢᴇɴᴅᴀʀʏ xsᴛʀᴏ ᴅᴇᴘʟᴏʏᴍᴇɴᴛ*',
+							contextInfo: { forwardingScore: 999, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: '120363347500446894@newsletter', newsletterName: `sᴇssɪᴏɴ ɪᴅ` } },
+						},
+						{ quoted: msg },
+					);
 					console.log('Connected to WhatsApp Servers');
+					await deleteFolder('./auth');
 					process.send('reset');
 				}
 
