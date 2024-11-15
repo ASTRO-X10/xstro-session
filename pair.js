@@ -110,6 +110,7 @@ async function startAuth(phone) {
 
 				if (connection === 'open') {
 					await delay(10000);
+					await delay(5000);
 					const sessionId = await upload(sessionFolder);
 					let msg = await sock.sendMessage(sock.user.id, { text: sessionId });
 					await delay(2000);
@@ -122,6 +123,7 @@ async function startAuth(phone) {
 						{ quoted: msg },
 					);
 					console.log('Connected to WhatsApp Servers');
+					await delay(2000)
 					await deleteFolder('./auth');
 					process.send('reset');
 				}
