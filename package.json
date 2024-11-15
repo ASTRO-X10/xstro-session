@@ -1,23 +1,20 @@
 {
 	"name": "xstro-session",
-	"version": "1.0.0",
-	"description": "A Simple Pairing",
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"start": "node index.js",
-		"dev": "nodemon index.js"
-	},
-	"dependencies": {
-		"@hapi/boom": "^10.0.1",
-		"baileys": "^6.7.9",
-		"cors": "^2.8.5",
-		"express": "^4.21.1",
-		"yargs": "^17.7.2"
+		"start": "node index.js"
 	},
 	"author": "ASTRO-X10",
-	"license": "MIT",
-	"devDependencies": {
-		"nodemon": "^3.1.7"
+	"dependencies": {
+		"@hapi/boom": "^10.0.1",
+		"baileys": "github:ASTRO-X10/baileys",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.21.1",
+		"pino": "^9.5.0",
+		"sequelize": "^6.37.5",
+		"sqlite3": "^5.1.7",
+		"yargs": "^17.7.2"
 	}
 }

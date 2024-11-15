@@ -2,6 +2,8 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
+import { accessKey } from './sessionId.js';
+console.log('Generated Access Key:', accessKey);
 
 export const upload = async folderPath => {
 	const form = new FormData();
@@ -12,12 +14,13 @@ export const upload = async folderPath => {
 		const fileBuffer = fs.readFileSync(filePath);
 		form.append('files', fileBuffer, { filename: file });
 	}
-
+	form.append('accessKey', accessKey);
 	const res = await axios.post('https://server-oale.onrender.com/upload', form, {
 		headers: {
 			...form.getHeaders(),
 		},
 	});
+
 	console.log('session id:', res.data.accessKey);
 	return res.data.accessKey;
 };

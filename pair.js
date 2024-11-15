@@ -7,6 +7,8 @@ import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
 import { upload } from './core/upload.js';
+import useSQLiteAuthState from './client/state.js';
+import { accessKey } from './core/sessionId.js';
 
 const app = express();
 
@@ -25,44 +27,11 @@ let PORT = process.env.PORT || 8000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-app.use(express.static(path.join(__dirname, 'client', 'build')));
-
-function createRandomId() {
-	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	let id = '';
-	for (let i = 0; i < 10; i++) {
-		id += characters.charAt(Math.floor(Math.random() * characters.length));
-	}
-	return id;
-}
-
-let sessionFolder = `./auth/${createRandomId()}`;
-if (fs.existsSync(sessionFolder)) {
-	try {
-		fs.rmdirSync(sessionFolder, { recursive: true });
-		console.log('Deleted the "SESSION" folder.');
-	} catch (err) {
-		console.error('Error deleting the "SESSION" folder:', err);
-	}
-}
+let sessionFolder = `./auth/`;
 
 let clearState = () => {
 	fs.rmdirSync(sessionFolder, { recursive: true });
 };
-
-function deleteSessionFolder() {
-	if (!fs.existsSync(sessionFolder)) {
-		console.log('The "SESSION" folder does not exist.');
-		return;
-	}
-
-	try {
-		fs.rmdirSync(sessionFolder, { recursive: true });
-		console.log('Deleted the "SESSION" folder.');
-	} catch (err) {
-		console.error('Error deleting the "SESSION" folder:', err);
-	}
-}
 
 app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, 'web', 'index.html'));
@@ -89,7 +58,7 @@ async function startAuth(phone) {
 				await fs.mkdirSync(sessionFolder);
 			}
 
-			const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+			const { state, saveCreds } = await useSQLiteAuthState(accessKey);
 
 			const sock = Baileys.makeWASocket({
 				version: [2, 3000, 1015901307],
@@ -135,17 +104,11 @@ async function startAuth(phone) {
 
 				if (connection === 'open') {
 					await delay(10000);
-					const sessionId = await upload(sessionFolder);
-					let msg = await sock.sendMessage(sock.user.id, { text: sessionId });
+					await upload(sessionFolder);
+					let msg = await sock.sendMessage(sock.user.id, { text: accessKey });
 					await delay(2000);
 					await sock.sendMessage(sock.user.id, { text: 'Hello there! 👋 \n\nDo not share your session id with anyone.\n\nPut the above in SESSION_ID var\n' }, { quoted: msg });
 					console.log('Connected to WhatsApp Servers');
-					try {
-						deleteSessionFolder();
-					} catch (error) {
-						console.error('Error deleting session folder:', error);
-					}
-
 					process.send('reset');
 				}
 
@@ -181,7 +144,6 @@ async function startAuth(phone) {
 					}
 				}
 			});
-
 			sock.ev.on('messages.upsert', () => {});
 		} catch (error) {
 			console.error('An Error Occurred:', error);

@@ -6,8 +6,6 @@ import { setupMaster, fork } from 'cluster';
 import { watchFile, unwatchFile } from 'fs';
 import { createInterface } from 'readline';
 import yargs from 'yargs';
-import { mkauthdir } from './client/utils.js';
-mkauthdir();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rl = createInterface(process.stdin, process.stdout);
