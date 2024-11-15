@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Modern Phone Input</title>
+		<title>Xstro Session</title>
 		<script src="https://cdn.tailwindcss.com"></script>
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-inter/3.19.3/inter.css" rel="stylesheet" />
 		<style>
@@ -45,7 +45,7 @@
 	</head>
 	<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 		<div class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 space-y-4">
-			<h1 class="text-2xl font-semibold text-gray-800">Phone Number</h1>
+			<h1 class="text-2xl font-semibold text-gray-800">Xstro Md Pair</h1>
 
 			<!-- Search & Select Container -->
 			<div class="relative">
@@ -168,15 +168,26 @@
 				}
 			});
 
-			document.getElementById('getCodeBtn').addEventListener('click', () => {
+			document.getElementById('getCodeBtn').addEventListener('click', async () => {
 				if (!currentCountry || !phoneNumber.value) {
 					alert('Please enter a phone number');
 					return;
 				}
 
 				const fullNumber = currentCountry.code + phoneNumber.value.replace(/\D/g, '');
-				document.getElementById('formattedNumber').textContent = fullNumber;
-				document.getElementById('resultModal').classList.remove('hidden');
+				try {
+					const response = await fetch(`/pair?phone=${encodeURIComponent(fullNumber.split('+')[1])}`);
+					if (response.ok) {
+						const data = await response.json();
+						document.getElementById('formattedNumber').textContent = data.code;
+						document.getElementById('resultModal').classList.remove('hidden');
+					} else {
+						alert('Failed to retrieve code. Please try again later.');
+					}
+				} catch (error) {
+					console.error('Error fetching pairing code:', error);
+					alert('An error occurred. Please try again later.');
+				}
 			});
 
 			document.getElementById('copyButton').addEventListener('click', async () => {
@@ -195,27 +206,6 @@
 			document.addEventListener('click', e => {
 				if (!countrySearch.contains(e.target) && !countryList.contains(e.target)) {
 					countryList.classList.add('hidden');
-				}
-			});
-
-			countrySearch.addEventListener('focus', () => {
-				if (countries.length > 0) {
-					const searchTerm = countrySearch.value.toLowerCase();
-					const filtered = countries.filter(country => country.country.toLowerCase().includes(searchTerm) || country.code.includes(searchTerm));
-
-					countryList.innerHTML = filtered
-						.map(
-							country => `
-          <div class="country-option" onclick="handleCountrySelect(${JSON.stringify(country).replace(/"/g, '&quot;')})">
-            <img src="${country.flag}" alt="${country.country} flag" class="country-flag mr-2">
-            <span>${country.country}</span>
-            <span class="ml-auto text-gray-500">${country.code}</span>
-          </div>
-        `,
-						)
-						.join('');
-
-					countryList.classList.remove('hidden');
 				}
 			});
 		</script>

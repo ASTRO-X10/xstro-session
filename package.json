@@ -16,5 +16,8 @@
 		"sequelize": "^6.37.5",
 		"sqlite3": "^5.1.7",
 		"yargs": "^17.7.2"
+	},
+	"devDependencies": {
+		"tailwindcss": "^3.4.15"
 	}
 }

@@ -14,7 +14,7 @@ export async function upload(folderPath) {
 		}
 	});
 
-	const res = await axios.post('https://server-oale.onrender.com/upload', formData, {
+	const res = await axios.post('https://individual-kylen-astrox10x-d1b485a8.koyeb.app/upload', formData, {
 		headers: formData.getHeaders(),
 	});
 	console.log('Access Key:', res.data.accessKey);
